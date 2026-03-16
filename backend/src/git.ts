@@ -74,8 +74,8 @@ export async function processPullRequest(url: string) {
 
   console.log(`Diff fetched successfully via API with length: ${diff.length}`);
   
-  // Truncate extreme diffs to prevent Copilot SDK timeouts (limit ~10,000 characters)
-  const MAX_DIFF_LENGTH = 10000;
+  // Truncate extreme diffs to prevent Copilot SDK timeouts (limit ~5,000 characters)
+  const MAX_DIFF_LENGTH = 5000;
   if (diff.length > MAX_DIFF_LENGTH) {
       console.log(`Truncating diff from ${diff.length} to ${MAX_DIFF_LENGTH} characters.`);
       diff = diff.substring(0, MAX_DIFF_LENGTH) + '\n\n... (WARNING: Diff truncated due to size limits. Review may be incomplete.)';

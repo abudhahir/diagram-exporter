@@ -54,6 +54,12 @@ app.post('/api/review', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error processing PR:', error);
+    
+    // Check if it's a timeout error from Copilot SDK
+    if (error.message && error.message.includes('Timeout after')) {
+        return res.status(504).json({ error: 'The PR diff is too large and the GitHub Copilot SDK timed out trying to review it. Try reviewing smaller, split PRs.' });
+    }
+    
     res.status(500).json({ error: error.message || 'An error occurred during PR review' });
   }
 });
