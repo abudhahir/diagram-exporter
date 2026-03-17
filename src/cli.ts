@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import * as fs from 'fs'
 import { convert } from './index'
 import type { OutputFormat } from './index'
+import { DiagramType } from './ir/types'
 
 const program = new Command()
 
@@ -24,6 +25,7 @@ program
 
     const result = convert(rawInput, options.format, {
       stripStyles: !options.styles,
+      diagramType: options.type as DiagramType | undefined,
     })
 
     if (options.output) {

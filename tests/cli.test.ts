@@ -36,4 +36,9 @@ describe('CLI', () => {
       fs.rmSync(outFile, { force: true })
     }
   })
+
+  it('overrides diagram type with --type flag', () => {
+    const output = runCli(`${FIXTURE} --format mermaid --type SEQUENCE`)
+    expect(output).toContain('sequenceDiagram')
+  })
 })
