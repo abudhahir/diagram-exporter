@@ -9,6 +9,9 @@ coverage/
 *.log
 *.tsbuildinfo
 
+# Worktrees
+.worktrees/
+
 # GCP UI specific runtime/temp files
 backend/repos/
 backend/diff.txt
