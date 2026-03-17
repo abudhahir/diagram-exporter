@@ -22,14 +22,12 @@ const CLASS_SHAPES = new Set([
 ])
 
 export function detect(diagram: IRDiagram): DiagramType {
-  let flowchartScore = 0
   let sequenceScore = 0
   let classScore = 0
 
   for (const node of diagram.nodes) {
     if (SEQUENCE_SHAPES.has(node.shape)) sequenceScore++
     else if (CLASS_SHAPES.has(node.shape)) classScore++
-    else if (FLOWCHART_SHAPES.has(node.shape)) flowchartScore++
   }
 
   // Sequence and class are specific — a single marker is sufficient

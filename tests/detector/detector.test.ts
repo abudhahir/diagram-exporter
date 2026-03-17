@@ -79,6 +79,14 @@ describe('detect', () => {
     expect(detect(diagram)).toBe(DiagramType.SEQUENCE)
   })
 
+  it('SEQUENCE wins over CLASS_DIAGRAM when both markers present', () => {
+    const diagram = makeDiagram([
+      makeNode(NodeShape.CLASS_BOX, '1'),
+      makeNode(NodeShape.LIFELINE, '2'),
+    ])
+    expect(detect(diagram)).toBe(DiagramType.SEQUENCE)
+  })
+
   it('falls back to FLOWCHART for empty diagram', () => {
     const diagram = makeDiagram([])
     expect(detect(diagram)).toBe(DiagramType.FLOWCHART)
