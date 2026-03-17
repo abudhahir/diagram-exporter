@@ -8,7 +8,7 @@
     "dex": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/cli.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "tsx src/cli.ts"
