@@ -64,7 +64,7 @@ export class DrawioEmitter {
     for (const node of diagram.nodes) {
       const b = node.bounds
       cells.push(
-        `<mxCell id="${escapeXml(node.id)}" value="${escapeXml(node.label)}" ` +
+        `<mxCell id="s${escapeXml(node.id)}" value="${escapeXml(node.label)}" ` +
         `style="${buildNodeStyle(node)}" vertex="1" parent="1">` +
         `<mxGeometry x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" as="geometry"/>` +
         `</mxCell>`
@@ -75,10 +75,10 @@ export class DrawioEmitter {
       const waypointXml = edge.waypoints.length > 0
         ? `<Array as="points">${edge.waypoints.map(p => `<mxPoint x="${p.x}" y="${p.y}"/>`).join('')}</Array>`
         : ''
-      const sourceAttr = edge.sourceId ? ` source="${escapeXml(edge.sourceId)}"` : ''
-      const targetAttr = edge.targetId ? ` target="${escapeXml(edge.targetId)}"` : ''
+      const sourceAttr = edge.sourceId ? ` source="s${escapeXml(edge.sourceId)}"` : ''
+      const targetAttr = edge.targetId ? ` target="s${escapeXml(edge.targetId)}"` : ''
       cells.push(
-        `<mxCell id="${escapeXml(edge.id)}" value="${escapeXml(edge.label)}" ` +
+        `<mxCell id="s${escapeXml(edge.id)}" value="${escapeXml(edge.label)}" ` +
         `style="${buildEdgeStyle(edge)}" edge="1"${sourceAttr}${targetAttr} parent="1">` +
         `<mxGeometry relative="1" as="geometry">${waypointXml}</mxGeometry>` +
         `</mxCell>`

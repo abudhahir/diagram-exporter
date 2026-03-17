@@ -61,8 +61,8 @@ describe('DrawioEmitter', () => {
 
   it('emits an mxCell for each node', () => {
     const output = emitter.emit(simpleDiagram)
-    expect(output).toContain('id="1"')
-    expect(output).toContain('id="2"')
+    expect(output).toContain('id="s1"')
+    expect(output).toContain('id="s2"')
   })
 
   it('emits node labels as value attributes', () => {
@@ -78,8 +78,8 @@ describe('DrawioEmitter', () => {
 
   it('emits edge mxCell with source and target', () => {
     const output = emitter.emit(simpleDiagram)
-    expect(output).toContain('source="1"')
-    expect(output).toContain('target="2"')
+    expect(output).toContain('source="s1"')
+    expect(output).toContain('target="s2"')
   })
 
   it('emits edge label', () => {
