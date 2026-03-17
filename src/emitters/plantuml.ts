@@ -1,12 +1,5 @@
 import { IRDiagram, IRNode, IREdge, DiagramType, NodeShape } from '../ir/types'
-
-function sanitizeId(id: string): string {
-  return `n${id.replace(/[^a-zA-Z0-9]/g, '_')}`
-}
-
-function sanitizeLabel(label: string): string {
-  return label.replace(/"/g, "'")
-}
+import { sanitizeId, sanitizeLabel } from './helpers'
 
 export class PlantUMLEmitter {
   emit(diagram: IRDiagram): string {

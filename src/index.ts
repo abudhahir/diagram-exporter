@@ -12,7 +12,6 @@ export type OutputFormat = 'drawio' | 'mermaid' | 'plantuml'
 
 export interface ConvertOptions {
   diagramType?: DiagramType
-  stripStyles?: boolean
 }
 
 export interface ConvertResult {

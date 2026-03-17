@@ -54,7 +54,7 @@ export interface GliffyObject {
   y: number
   width: number
   height: number
-  rotation: number
+  rotation?: number
   order: number | string
   graphic: GliffyGraphic | null
   children: GliffyObject[] | null

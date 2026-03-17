@@ -10,19 +10,19 @@ function escapeXml(str: string): string {
 
 function nodeShapeToDrawio(shape: NodeShape): string {
   switch (shape) {
-    case NodeShape.DIAMOND: return 'rhombus;'
-    case NodeShape.CIRCLE: return 'ellipse;'
-    case NodeShape.CYLINDER: return 'shape=cylinder;'
-    case NodeShape.TERMINAL: return 'rounded=1;'
-    case NodeShape.DOCUMENT: return 'shape=document;'
-    case NodeShape.PARALLELOGRAM: return 'shape=parallelogram;'
-    case NodeShape.LIFELINE: return 'shape=mxgraph.uml.lifeline;'
-    case NodeShape.ACTOR: return 'shape=mxgraph.uml.actor;'
-    case NodeShape.ACTIVATION: return 'shape=mxgraph.uml.activation;'
-    case NodeShape.CLASS_BOX: return 'shape=table;'
-    case NodeShape.INTERFACE_BOX: return 'shape=table;'
-    case NodeShape.ENUM_BOX: return 'shape=table;'
-    default: return 'rounded=0;'
+    case NodeShape.DIAMOND: return 'rhombus'
+    case NodeShape.CIRCLE: return 'ellipse'
+    case NodeShape.CYLINDER: return 'shape=cylinder'
+    case NodeShape.TERMINAL: return 'rounded=1'
+    case NodeShape.DOCUMENT: return 'shape=document'
+    case NodeShape.PARALLELOGRAM: return 'shape=parallelogram'
+    case NodeShape.LIFELINE: return 'shape=mxgraph.uml.lifeline'
+    case NodeShape.ACTOR: return 'shape=mxgraph.uml.actor'
+    case NodeShape.ACTIVATION: return 'shape=mxgraph.uml.activation'
+    case NodeShape.CLASS_BOX: return 'shape=table'
+    case NodeShape.INTERFACE_BOX: return 'shape=table'
+    case NodeShape.ENUM_BOX: return 'shape=table'
+    default: return 'rounded=0'
   }
 }
 
@@ -39,6 +39,7 @@ function buildNodeStyle(node: IRNode): string {
     `fontSize=${s.fontSize}`,
     'whiteSpace=wrap',
     'html=1',
+    ...(node.bounds.rotation !== 0 ? [`rotation=${node.bounds.rotation}`] : []),
   ].join(';') + ';'
 }
 

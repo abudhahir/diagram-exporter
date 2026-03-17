@@ -1,14 +1,5 @@
 import { IRDiagram, DiagramType, NodeShape } from '../ir/types'
 
-const FLOWCHART_SHAPES = new Set([
-  NodeShape.RECTANGLE,
-  NodeShape.DIAMOND,
-  NodeShape.TERMINAL,
-  NodeShape.DOCUMENT,
-  NodeShape.CYLINDER,
-  NodeShape.PARALLELOGRAM,
-])
-
 const SEQUENCE_SHAPES = new Set([
   NodeShape.LIFELINE,
   NodeShape.ACTIVATION,
@@ -21,6 +12,10 @@ const CLASS_SHAPES = new Set([
   NodeShape.ENUM_BOX,
 ])
 
+// DiagramType is classified by the presence of type-specific markers.
+// SEQUENCE and CLASS_DIAGRAM are detected by a single marker node.
+// FLOWCHART is the unconditional default — it covers generic diagrams,
+// basic shapes, and any diagram that does not contain typed UML markers.
 export function detect(diagram: IRDiagram): DiagramType {
   let sequenceScore = 0
   let classScore = 0
