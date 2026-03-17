@@ -74,7 +74,7 @@ export class PlantUMLEmitter {
         node.shape === NodeShape.INTERFACE_BOX ? 'interface'
         : node.shape === NodeShape.ENUM_BOX ? 'enum'
         : 'class'
-      lines.push(`${keyword} "${label}"`)
+      lines.push(`${keyword} "${label}" as ${id}`)
     }
     for (const edge of diagram.edges) {
       if (!edge.sourceId || !edge.targetId) continue

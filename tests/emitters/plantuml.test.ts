@@ -82,17 +82,17 @@ describe('PlantUMLEmitter — class diagram', () => {
 
   it('emits class keyword for CLASS_BOX', () => {
     const diagram: IRDiagram = { title: 'T', type: DiagramType.CLASS_DIAGRAM, nodes: [makeNode('1', NodeShape.CLASS_BOX, 'Animal')], edges: [], width: 800, height: 600, background: '#fff' }
-    expect(emitter.emit(diagram)).toContain('class "Animal"')
+    expect(emitter.emit(diagram)).toContain('class "Animal" as n1')
   })
 
   it('emits interface keyword for INTERFACE_BOX', () => {
     const diagram: IRDiagram = { title: 'T', type: DiagramType.CLASS_DIAGRAM, nodes: [makeNode('1', NodeShape.INTERFACE_BOX, 'Runnable')], edges: [], width: 800, height: 600, background: '#fff' }
-    expect(emitter.emit(diagram)).toContain('interface "Runnable"')
+    expect(emitter.emit(diagram)).toContain('interface "Runnable" as n1')
   })
 
   it('emits enum keyword for ENUM_BOX', () => {
     const diagram: IRDiagram = { title: 'T', type: DiagramType.CLASS_DIAGRAM, nodes: [makeNode('1', NodeShape.ENUM_BOX, 'Status')], edges: [], width: 800, height: 600, background: '#fff' }
-    expect(emitter.emit(diagram)).toContain('enum "Status"')
+    expect(emitter.emit(diagram)).toContain('enum "Status" as n1')
   })
 
   it('emits relationship arrow', () => {
