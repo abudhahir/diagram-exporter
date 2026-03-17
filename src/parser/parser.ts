@@ -90,7 +90,31 @@ export function parse(input: string | GliffyDiagram): IRDiagram {
     nodes.push(node)
   }
 
-  // Pass 2: lines → edges (added in Task 6)
+  // Pass 2: lines → edges
+  for (const obj of stage.objects) {
+    if (!obj.graphic || obj.graphic.type !== 'Line') continue
+    const line = obj.graphic.Line ?? {}
+    const constraints = obj.constraints
+
+    const sourceConstraint = constraints?.startConstraint?.StartPositionConstraint
+    const targetConstraint = constraints?.endConstraint?.EndPositionConstraint
+
+    const edge: IREdge = {
+      id: String(obj.id),
+      sourceId: sourceConstraint ? String(sourceConstraint.nodeId) : null,
+      targetId: targetConstraint ? String(targetConstraint.nodeId) : null,
+      label: extractTextLabel(obj),
+      style: parseLineStyle(obj.graphic),
+      startArrow: mapArrow(line.startArrow),
+      endArrow: mapArrow(line.endArrow),
+      waypoints: (line.controlPath ?? []).map(([x, y]) => ({ x: obj.x + x, y: obj.y + y })),
+      sourceX: sourceConstraint?.px ?? 0.5,
+      sourceY: sourceConstraint?.py ?? 0.5,
+      targetX: targetConstraint?.px ?? 0.5,
+      targetY: targetConstraint?.py ?? 0.5,
+    }
+    edges.push(edge)
+  }
 
   return {
     title: diagram.metadata?.title ?? 'Untitled',

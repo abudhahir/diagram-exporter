@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { parse } from '../../src/parser/parser'
 import { NodeShape, DiagramType, ArrowType } from '../../src/ir/types'
 import singleShape from './fixtures/single-shape.json'
+import shapeWithEdge from './fixtures/shape-with-edge.json'
 
 describe('parse — nodes', () => {
   it('parses a single shape node from a Gliffy object', () => {
@@ -50,5 +51,65 @@ describe('parse — nodes', () => {
   it('ignores child Text objects — they are not standalone nodes', () => {
     const diagram = parse(singleShape)
     expect(diagram.nodes.find(n => n.id === '2')).toBeUndefined()
+  })
+})
+
+describe('parse — edges', () => {
+  it('parses a line as an IREdge', () => {
+    const diagram = parse(shapeWithEdge)
+    expect(diagram.nodes).toHaveLength(2)
+    expect(diagram.edges).toHaveLength(1)
+  })
+
+  it('resolves edge sourceId and targetId from constraints', () => {
+    const diagram = parse(shapeWithEdge)
+    const edge = diagram.edges[0]
+    expect(edge.sourceId).toBe('1')
+    expect(edge.targetId).toBe('3')
+  })
+
+  it('maps edge arrow types', () => {
+    const diagram = parse(shapeWithEdge)
+    const edge = diagram.edges[0]
+    expect(edge.startArrow).toBe(ArrowType.NONE)
+    expect(edge.endArrow).toBe(ArrowType.OPEN)
+  })
+
+  it('maps edge px/py connection points', () => {
+    const diagram = parse(shapeWithEdge)
+    const edge = diagram.edges[0]
+    expect(edge.sourceX).toBe(0.5)
+    expect(edge.sourceY).toBe(1.0)
+    expect(edge.targetX).toBe(0.5)
+    expect(edge.targetY).toBe(0.0)
+  })
+
+  it('extracts edge label from child Text object', () => {
+    const diagram = parse(shapeWithEdge)
+    const edge = diagram.edges[0]
+    expect(edge.label).toBe('yes')
+  })
+
+  it('maps controlPath to waypoints with absolute coordinates', () => {
+    const diagram = parse(shapeWithEdge)
+    const edge = diagram.edges[0]
+    // controlPath [[0,0],[0,90]] + obj position x=160, y=110
+    expect(edge.waypoints).toHaveLength(2)
+    expect(edge.waypoints[0]).toEqual({ x: 160, y: 110 })
+    expect(edge.waypoints[1]).toEqual({ x: 160, y: 200 })
+  })
+
+  it('sets null sourceId/targetId when no constraints', () => {
+    const noConstraints = {
+      ...shapeWithEdge,
+      stage: {
+        ...shapeWithEdge.stage,
+        objects: [{ ...shapeWithEdge.stage.objects[2], constraints: null }]
+      }
+    }
+    const diagram = parse(noConstraints)
+    const edge = diagram.edges[0]
+    expect(edge.sourceId).toBeNull()
+    expect(edge.targetId).toBeNull()
   })
 })
