@@ -25,7 +25,6 @@ export enum ArrowType {
   NONE = 'NONE',
   OPEN = 'OPEN',
   FILLED = 'FILLED',
-  DIAMOND = 'DIAMOND_ARROW',
 }
 
 export interface IRStyle {
