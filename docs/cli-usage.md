@@ -1,72 +1,78 @@
 # CLI Usage
 
+`dex` is the command-line interface for converting Gliffy diagrams to other formats.
+
 ## Installation
 
 ```bash
-npm install -g dex
+npm install -g @cleveloper/dex
 ```
 
-## Basic Usage
+## Syntax
 
+```
+dex <input> -f <format> [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|---|---|
+| `<input>` | Path to a `.gliffy` file, or `-` to read from stdin |
+
+## Options
+
+| Flag | Description |
+|---|---|
+| `-f, --format <format>` | **Required.** Output format: `drawio`, `mermaid`, or `plantuml` |
+| `-o, --output <file>` | Write output to a file instead of stdout |
+| `-t, --type <type>` | Override automatic diagram type detection: `FLOWCHART`, `SEQUENCE`, `CLASS_DIAGRAM` |
+| `-V, --version` | Print version number |
+| `-h, --help` | Display help |
+
+## Examples
+
+**Convert to Mermaid and print to terminal:**
 ```bash
-# Convert to Mermaid (printed to stdout)
 dex diagram.gliffy -f mermaid
+```
 
-# Convert to Draw.io XML and save to file
-dex diagram.gliffy -f drawio -o diagram.xml
+**Convert to Draw.io XML and save to file:**
+```bash
+dex diagram.gliffy -f drawio -o diagram.drawio
+```
 
-# Convert to PlantUML
-dex diagram.gliffy -f plantuml -o diagram.puml
+**Convert to PlantUML:**
+```bash
+dex diagram.gliffy -f plantuml
+```
 
-# Read from stdin
-cat diagram.gliffy | dex - -f mermaid
-
-# Override auto-detected diagram type
+**Override diagram type detection:**
+```bash
 dex diagram.gliffy -f mermaid -t SEQUENCE
 ```
 
-## Reference
-
+**Read from stdin (pipe):**
+```bash
+cat diagram.gliffy | dex - -f mermaid
 ```
-dex <input> [options]
 
-Arguments:
-  input                   Path to .gliffy file, or - to read from stdin
-
-Options:
-  -f, --format <format>   Output format: drawio | mermaid | plantuml  (required)
-  -o, --output <file>     Write output to file instead of stdout
-  -t, --type <type>       Override diagram type: FLOWCHART | SEQUENCE | CLASS_DIAGRAM
-  -h, --help              Show help
-  -V, --version           Show version
+**Pipe output to clipboard (macOS):**
+```bash
+dex diagram.gliffy -f mermaid | pbcopy
 ```
 
 ## Output Formats
 
-| Flag | Format | File extension |
-|---|---|---|
-| `drawio` | Draw.io XML | `.xml` or `.drawio` |
-| `mermaid` | Mermaid diagram text | `.md` or `.mmd` |
-| `plantuml` | PlantUML text | `.puml` |
+### Draw.io XML (`drawio`)
+Produces an XML file compatible with [draw.io](https://app.diagrams.net/). Open the `.drawio` file directly in the app or import via File → Import.
 
-## Diagram Type Override
+### Mermaid (`mermaid`)
+Produces a [Mermaid](https://mermaid.js.org/) diagram definition. Paste into any Mermaid-compatible renderer — GitHub Markdown, Notion, Mermaid Live Editor, etc.
 
-By default `dex` auto-detects the diagram type from the shapes present in the file. Use `-t` to override:
+### PlantUML (`plantuml`)
+Produces a [PlantUML](https://plantuml.com/) diagram definition wrapped in `@startuml` / `@enduml`. Render with the PlantUML CLI, VS Code extension, or online server.
 
-| Value | When to use |
-|---|---|
-| `FLOWCHART` | Force flowchart syntax |
-| `SEQUENCE` | Force sequence diagram syntax |
-| `CLASS_DIAGRAM` | Force class diagram syntax |
+## Diagram Type Detection
 
-## Piping Examples
-
-```bash
-# Chain into clipboard (macOS)
-dex diagram.gliffy -f mermaid | pbcopy
-
-# Batch convert all .gliffy files in a directory
-for f in *.gliffy; do
-  dex "$f" -f drawio -o "${f%.gliffy}.xml"
-done
-```
+`dex` automatically classifies diagrams as `FLOWCHART`, `SEQUENCE`, or `CLASS_DIAGRAM` based on the shapes present in the Gliffy file. Use `--type` to override if the result is incorrect.

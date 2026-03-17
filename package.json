@@ -1,5 +1,5 @@
 {
-  "name": "dex",
+  "name": "@cleveloper/dex",
   "version": "0.1.0",
   "description": "Gliffy diagram conversion library and CLI",
   "main": "dist/index.js",
@@ -13,6 +13,10 @@
     "test:watch": "vitest",
     "dev": "tsx src/cli.ts"
   },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.0.0",

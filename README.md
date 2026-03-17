@@ -7,7 +7,7 @@ Available as a CLI tool and a TypeScript/Node.js library.
 ## Quick Start
 
 ```bash
-npm install -g dex
+npm install -g @cleveloper/dex
 dex diagram.gliffy -f mermaid
 ```
 

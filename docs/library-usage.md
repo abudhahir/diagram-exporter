@@ -1,22 +1,11 @@
 # Library Usage
 
+`@cleveloper/dex` is available as a Node.js/TypeScript library with a single entry-point function.
+
 ## Installation
 
 ```bash
-npm install dex
-```
-
-## Quick Start
-
-```typescript
-import { convert } from 'dex'
-import * as fs from 'fs'
-
-const rawJson = fs.readFileSync('diagram.gliffy', 'utf-8')
-const result = convert(rawJson, 'mermaid')
-
-console.log(result.output)       // Mermaid diagram text
-console.log(result.detectedType) // e.g. "FLOWCHART"
+npm install @cleveloper/dex
 ```
 
 ## API
@@ -24,95 +13,105 @@ console.log(result.detectedType) // e.g. "FLOWCHART"
 ### `convert(input, format, options?)`
 
 ```typescript
-convert(
-  input: string,
-  format: 'drawio' | 'mermaid' | 'plantuml',
-  options?: ConvertOptions
-): ConvertResult
+import { convert } from '@cleveloper/dex'
+
+const result = convert(input, format, options)
 ```
 
-**Parameters:**
+#### Parameters
 
 | Parameter | Type | Description |
 |---|---|---|
-| `input` | `string` | Raw Gliffy JSON string |
+| `input` | `string` | Raw Gliffy JSON string (file reading is the caller's responsibility) |
 | `format` | `'drawio' \| 'mermaid' \| 'plantuml'` | Target output format |
-| `options.diagramType` | `DiagramType` (optional) | Override auto-detection |
+| `options` | `ConvertOptions` (optional) | Conversion options (see below) |
 
-**Returns:**
+#### `ConvertOptions`
+
+| Property | Type | Description |
+|---|---|---|
+| `diagramType` | `DiagramType` (optional) | Override automatic diagram type detection |
+
+#### `ConvertResult`
+
+| Property | Type | Description |
+|---|---|---|
+| `output` | `string` | Converted diagram string in the requested format |
+| `format` | `OutputFormat` | The format used |
+| `detectedType` | `DiagramType` | Diagram type that was used (detected or overridden) |
+| `warnings` | `string[]` | Non-fatal issues encountered during conversion |
+
+### `DiagramType` enum
 
 ```typescript
-interface ConvertResult {
-  output: string        // Converted diagram text or XML
-  format: OutputFormat
-  detectedType: DiagramType
-  warnings: string[]
-}
+import { DiagramType } from '@cleveloper/dex'
+
+DiagramType.FLOWCHART     // flowchart / general diagram
+DiagramType.SEQUENCE      // sequence / interaction diagram
+DiagramType.CLASS_DIAGRAM // UML class diagram
+DiagramType.UNKNOWN       // unclassified
 ```
 
-> The library accepts **raw JSON strings only** — no filesystem access.
-> File reading is the caller's responsibility. This keeps the library browser-compatible.
-
 ## Examples
+
+### Basic conversion
+
+```typescript
+import { readFileSync } from 'fs'
+import { convert } from '@cleveloper/dex'
+
+const raw = readFileSync('diagram.gliffy', 'utf-8')
+const result = convert(raw, 'mermaid')
+console.log(result.output)
+```
 
 ### Convert to Draw.io XML
 
 ```typescript
-import { convert } from 'dex'
-import * as fs from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
+import { convert } from '@cleveloper/dex'
 
-const json = fs.readFileSync('diagram.gliffy', 'utf-8')
-const result = convert(json, 'drawio')
-
-fs.writeFileSync('diagram.xml', result.output, 'utf-8')
+const raw = readFileSync('diagram.gliffy', 'utf-8')
+const result = convert(raw, 'drawio')
+writeFileSync('diagram.drawio', result.output)
 ```
 
-### Override diagram type
+### Override diagram type detection
 
 ```typescript
-import { convert, DiagramType } from 'dex'
+import { convert, DiagramType } from '@cleveloper/dex'
 
-const result = convert(json, 'plantuml', {
+const result = convert(raw, 'plantuml', {
   diagramType: DiagramType.SEQUENCE,
 })
 ```
 
-### Handle warnings
+### Inspect result metadata
 
 ```typescript
-const result = convert(json, 'mermaid')
+const result = convert(raw, 'mermaid')
 
-if (result.warnings.length > 0) {
-  console.warn('Conversion warnings:', result.warnings)
-}
+console.log(result.detectedType)  // e.g. DiagramType.FLOWCHART
+console.log(result.warnings)      // [] if no issues
 ```
 
-### Use in browser (via bundler)
+## TypeScript types
 
-The library has no Node.js dependencies — pass raw JSON obtained from a file input or API response:
+All public types are exported from the package root:
 
 ```typescript
-import { convert } from 'dex'
+import type {
+  OutputFormat,
+  ConvertOptions,
+  ConvertResult,
+  IRDiagram,
+} from '@cleveloper/dex'
 
-async function handleFile(file: File) {
-  const json = await file.text()
-  const result = convert(json, 'mermaid')
-  return result.output
-}
+import { DiagramType } from '@cleveloper/dex'
 ```
 
-## Exported Types
+## Notes
 
-```typescript
-import type { ConvertOptions, ConvertResult, OutputFormat, IRDiagram } from 'dex'
-import { DiagramType } from 'dex'
-```
-
-| Export | Kind | Description |
-|---|---|---|
-| `convert` | function | Main conversion entry point |
-| `DiagramType` | enum | `FLOWCHART \| SEQUENCE \| CLASS_DIAGRAM \| UNKNOWN` |
-| `ConvertOptions` | interface | Options for `convert()` |
-| `ConvertResult` | interface | Return type of `convert()` |
-| `OutputFormat` | type | `'drawio' \| 'mermaid' \| 'plantuml'` |
-| `IRDiagram` | interface | Intermediate Representation type |
+- `convert()` accepts only raw JSON strings — it does not read files. Use `fs.readFileSync` in your calling code.
+- The library has no Node.js `fs` dependency, making it compatible with browser bundlers.
+- The only runtime dependency is `commander` (used by the CLI, not the library core).

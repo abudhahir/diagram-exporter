@@ -1,74 +1,116 @@
 # Architecture
 
-## Pipeline Overview
+`dex` converts Gliffy diagrams through a three-stage pipeline:
 
-`dex` converts Gliffy diagrams through a 3-stage pipeline:
-
-```mermaid
-flowchart LR
-    A[Input\nfile path or JSON string] --> B[Parser]
-    B --> C[Intermediate Representation]
-    C --> D[Detector\ndiagram type]
-    D --> E[Emitter]
-    E --> F1[Draw.io XML]
-    E --> F2[Mermaid]
-    E --> F3[PlantUML]
+```
+Gliffy JSON
+    │
+    ▼
+┌─────────┐
+│  Parser │  Gliffy JSON → Intermediate Representation (IR)
+└─────────┘
+    │
+    ▼
+┌──────────┐
+│ Detector │  IR → DiagramType classification
+└──────────┘
+    │
+    ▼
+┌─────────┐
+│ Emitter │  IR + DiagramType → target format string
+└─────────┘
+    │
+    ▼
+Draw.io XML / Mermaid / PlantUML
 ```
 
-Each stage is independent. The IR is the contract between stages — no Gliffy-specific details leak past the Parser.
+Each stage is fully decoupled. The Intermediate Representation is the only shared contract between them.
 
 ---
 
-## Stage 1: Parser
+## Intermediate Representation (IR)
 
-**Input:** Raw Gliffy JSON string
-**Output:** `IRDiagram`
+Defined in `src/ir/types.ts`. All Gliffy-specific details are resolved by the parser; downstream stages never see raw Gliffy data.
 
-The parser operates in two passes:
+```typescript
+interface IRDiagram {
+  title: string
+  type: DiagramType
+  nodes: IRNode[]
+  edges: IREdge[]
+  width: number
+  height: number
+  background: string
+}
 
-1. **Pass 1 — Shapes → Nodes:** Iterates all objects with a `graphic` field. Maps Gliffy UIDs (e.g. `com.gliffy.shape.flowchart.flowchart_v1.default.decision`) to `NodeShape` enum values via `shape-map.ts`. Extracts plain-text labels by stripping HTML tags from child text objects.
+interface IRNode {
+  id: string
+  label: string
+  shape: NodeShape
+  bounds: IRBounds
+  style: IRStyle
+}
 
-2. **Pass 2 — Lines → Edges:** Iterates objects with `graphic.type === 'Line'`. Resolves `constraints.startConstraint.nodeId` / `endConstraint.nodeId` to `IREdge.sourceId` / `targetId`. Maps `controlPath` coordinates to absolute `IRPoint` waypoints.
+interface IREdge {
+  id: string
+  label: string
+  sourceId: string
+  targetId: string
+  waypoints: IRPoint[]
+  arrowStart: ArrowType
+  arrowEnd: ArrowType
+  style: IRStyle
+}
 
-**Key files:**
-
-| File | Responsibility |
-|---|---|
-| `src/parser/parser.ts` | Two-pass parser entry point |
-| `src/parser/shape-map.ts` | Gliffy UID → `NodeShape` lookup table |
-| `src/parser/label-extractor.ts` | HTML tag stripping |
-| `src/parser/gliffy-types.ts` | TypeScript interfaces for raw Gliffy JSON |
-
----
-
-## Stage 2: Detector
-
-**Input:** `IRDiagram`
-**Output:** `DiagramType`
-
-Classifies the diagram by scoring node shapes against known categories:
-
-```mermaid
-flowchart TD
-    A[IRDiagram] --> B[Extract all NodeShapes]
-    B --> C{Shape voting}
-    C -->|LIFELINE or ACTIVATION present| D[SEQUENCE]
-    C -->|CLASS_BOX, INTERFACE_BOX, or ENUM_BOX present| E[CLASS_DIAGRAM]
-    C -->|no marker shapes| F[FLOWCHART\ndefault]
+interface IRBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation?: number
+}
 ```
 
-SEQUENCE and CLASS_DIAGRAM are detected by the presence of marker shapes. FLOWCHART is the unconditional fallback.
+---
 
-**Key file:** `src/detector/detector.ts`
+## Parser (`src/parser/parser.ts`)
+
+Two-pass parser over `GliffyDiagram.stage.objects`:
+
+**Pass 1 — Shapes → IRNode:**
+- Filters objects where `graphic.type !== 'Line'`
+- Maps Gliffy `uid` to `NodeShape` via `src/parser/shape-map.ts`
+- Extracts text labels by walking child objects and stripping HTML via `src/parser/label-extractor.ts`
+- Reads position/size from `GliffyGraphic` dimensions
+
+**Pass 2 — Lines → IREdge:**
+- Filters objects where `graphic.type === 'Line'`
+- Resolves `constraints.startConstraint` and `endConstraint` to `sourceId`/`targetId`
+- Maps `graphic.Line.controlPath` to absolute waypoint coordinates
+
+**Shape UID mapping (`src/parser/shape-map.ts`):**
+Gliffy UIDs are long dotted strings (e.g. `com.gliffy.shape.flowchart.flowchart_v1.default.decision`). The map covers 20+ common shapes. Unknown UIDs fall back to `NodeShape.RECTANGLE`.
 
 ---
 
-## Stage 3: Emitters
+## Detector (`src/detector/detector.ts`)
 
-**Input:** `IRDiagram` (with `type` set)
-**Output:** String (XML or diagram text)
+Shape-voting classifier. Iterates `diagram.nodes` and tallies shapes against two sets:
 
-All three emitters implement the same interface:
+| Set | Shapes | Wins if |
+|---|---|---|
+| `SEQUENCE_SHAPES` | `ACTOR`, `LIFELINE`, `ACTIVATION` | any match |
+| `CLASS_SHAPES` | `CLASS_BOX`, `INTERFACE_BOX`, `ENUM_BOX` | any match |
+
+Priority: **SEQUENCE > CLASS_DIAGRAM > FLOWCHART**
+
+FLOWCHART is the unconditional default when no marker shapes are found.
+
+---
+
+## Emitters
+
+Each emitter implements the same interface:
 
 ```typescript
 interface Emitter {
@@ -76,101 +118,73 @@ interface Emitter {
 }
 ```
 
-### DrawioEmitter
+### Draw.io (`src/emitters/drawio.ts`)
 
-- Generates `<mxGraphModel>` XML with `<mxCell>` nodes and edges
-- Passes `IRBounds` directly to `mxGeometry` (full spatial fidelity)
-- Builds semicolon-delimited style strings from `IRStyle`
-- Edge waypoints → `<Array as="points"><mxPoint .../></Array>`
-- Node/edge IDs prefixed with `s` to avoid collision with reserved root cells `0` and `1`
+Produces `<mxGraphModel>` XML. Key decisions:
 
-### MermaidEmitter
+- Root cells `id="0"` and `id="1"` are reserved by Draw.io — all node/edge IDs are prefixed with `s` (e.g. `s1`, `s3`) to avoid collision.
+- Style strings use semicolon-separated key=value pairs (e.g. `rounded=1;fillColor=#dae8fc;`). Shape tokens have no trailing semicolon before the join.
+- Rotation is written as `rotation=<degrees>` in the style string when non-zero.
+- Edges use `<Array as="points">` child elements for waypoints.
 
-- Dispatches by `DiagramType` to `emitFlowchart`, `emitSequence`, or `emitClassDiagram`
-- Maps `NodeShape` to bracket syntax: `DIAMOND` → `{label}`, `CIRCLE` → `((label))`, etc.
-- Sanitises node IDs (prefixed with `n`, special chars replaced with `_`)
-- Layout coordinates are discarded — Mermaid handles layout automatically
+### Mermaid (`src/emitters/mermaid.ts`)
 
-### PlantUMLEmitter
+Dispatches by `diagram.type`:
 
-- Dispatches by `DiagramType`
-- Class diagram nodes declared as `class "Label" as nId` for alias-based edge references
-- Uses `skinparam` blocks for style hints
-
-**Key files:**
-
-| File | Responsibility |
+| DiagramType | Mermaid syntax |
 |---|---|
-| `src/emitters/drawio.ts` | IR → Draw.io XML |
-| `src/emitters/mermaid.ts` | IR → Mermaid |
-| `src/emitters/plantuml.ts` | IR → PlantUML |
-| `src/emitters/helpers.ts` | `sanitizeId`, `sanitizeLabel` shared utilities |
+| `FLOWCHART` | `flowchart TD` with bracket-syntax nodes |
+| `SEQUENCE` | `sequenceDiagram` with `->>`/`-->>` messages |
+| `CLASS_DIAGRAM` | `classDiagram` with class/relationship syntax |
+
+Node shapes in flowcharts use Mermaid bracket syntax:
+
+| NodeShape | Mermaid bracket |
+|---|---|
+| RECTANGLE | `[label]` |
+| DIAMOND | `{label}` |
+| CIRCLE | `((label))` |
+| CYLINDER | `[(label)]` |
+| PARALLELOGRAM | `[/label/]` |
+| TERMINAL | `([label])` |
+| Default | `[label]` |
+
+Node IDs are sanitised via `sanitizeId()` (prefixed with `n`, non-alphanumeric replaced with `_`).
+
+### PlantUML (`src/emitters/plantuml.ts`)
+
+Wrapped in `@startuml` / `@enduml`. Dispatches by `diagram.type`:
+
+| DiagramType | PlantUML construct |
+|---|---|
+| `FLOWCHART` | `:label;` activity nodes + arrows |
+| `SEQUENCE` | `participant` declarations + `->` messages |
+| `CLASS_DIAGRAM` | `class "Label" as nId` + `n1 --> n2` relationships |
+
+The `as nId` alias is required on class declarations so that edge references can resolve unambiguously.
 
 ---
 
-## Intermediate Representation (IR)
+## Public API (`src/index.ts`)
 
-The IR is a typed graph model. All Gliffy-specific details are fully resolved during parsing.
-
-```mermaid
-classDiagram
-    class IRDiagram {
-        +string title
-        +DiagramType type
-        +IRNode[] nodes
-        +IREdge[] edges
-        +number width
-        +number height
-        +string background
-    }
-    class IRNode {
-        +string id
-        +NodeShape shape
-        +string label
-        +IRStyle style
-        +IRBounds bounds
-        +IRNode[] children
-        +string[] groupIds
-    }
-    class IREdge {
-        +string id
-        +string sourceId
-        +string targetId
-        +string label
-        +IRStyle style
-        +ArrowType startArrow
-        +ArrowType endArrow
-        +IRPoint[] waypoints
-    }
-    class IRStyle {
-        +string fillColor
-        +string strokeColor
-        +string fontColor
-        +number strokeWidth
-        +boolean dashed
-        +number opacity
-        +number fontSize
-    }
-    class IRBounds {
-        +number x
-        +number y
-        +number width
-        +number height
-        +number rotation
-    }
-    IRDiagram --> IRNode
-    IRDiagram --> IREdge
-    IRNode --> IRStyle
-    IRNode --> IRBounds
-    IREdge --> IRStyle
+```typescript
+export function convert(
+  input: string,         // raw Gliffy JSON string
+  format: OutputFormat,  // 'drawio' | 'mermaid' | 'plantuml'
+  options?: ConvertOptions
+): ConvertResult
 ```
 
-**Enums:**
+The library has no `fs` dependency — file reading is intentionally left to the caller (or the CLI layer). This keeps the library compatible with browser bundlers.
 
-| Enum | Values |
-|---|---|
-| `DiagramType` | `FLOWCHART`, `SEQUENCE`, `CLASS_DIAGRAM`, `UNKNOWN` |
-| `NodeShape` | `RECTANGLE`, `DIAMOND`, `CIRCLE`, `CYLINDER`, `PARALLELOGRAM`, `TERMINAL`, `DOCUMENT`, `ACTOR`, `LIFELINE`, `ACTIVATION`, `CLASS_BOX`, `INTERFACE_BOX`, `ENUM_BOX` |
-| `ArrowType` | `NONE`, `OPEN`, `FILLED` |
+---
 
-**Key file:** `src/ir/types.ts`
+## CLI (`src/cli.ts`)
+
+Built on [commander.js](https://github.com/tj/commander.js/). Responsibilities:
+
+- Read the input file from disk (or stdin for `-`)
+- Forward raw JSON to `convert()`
+- Write `result.output` to stdout or an output file
+
+The CLI is the only layer in the codebase that touches the filesystem.

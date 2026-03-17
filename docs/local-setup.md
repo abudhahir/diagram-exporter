@@ -2,13 +2,13 @@
 
 ## Prerequisites
 
-| Tool | Minimum version | Check |
+| Tool | Version | Notes |
 |---|---|---|
-| Node.js | 18.x | `node --version` |
-| npm | 9.x | `npm --version` |
-| Git | any | `git --version` |
+| Node.js | 18 or higher | Required |
+| npm | 9 or higher | Bundled with Node.js |
+| TypeScript | 5.x | Installed as devDependency |
 
-## Clone and Install
+## Clone and install
 
 ```bash
 git clone https://github.com/abudhahir/diagram-exporter.git
@@ -16,26 +16,9 @@ cd diagram-exporter
 npm install
 ```
 
-## Run Tests
-
-```bash
-# Run all tests once
-npm test
-
-# Run in watch mode (re-runs on file change)
-npm run test:watch
-```
-
-Expected output:
-
-```
- Test Files  11 passed (11)
-      Tests  99 passed (99)
-```
-
 ## Build
 
-Compiles TypeScript to `dist/`:
+Compiles TypeScript to `dist/` and marks the CLI binary as executable:
 
 ```bash
 npm run build
@@ -45,79 +28,112 @@ Output:
 
 ```
 dist/
-  index.js        # Library entry point
-  index.d.ts      # Type declarations
-  cli.js          # CLI entry point
+  cli.js       ← executable CLI binary
+  index.js     ← library entry point
+  index.d.ts   ← TypeScript declarations
   ...
 ```
 
-## Run the CLI Locally (Without Building)
-
-Use `tsx` to run the CLI directly from source:
+## Run tests
 
 ```bash
-npm run dev -- path/to/diagram.gliffy -f mermaid
+npm test
 ```
 
-This is equivalent to running the compiled `dex` command but reads directly from `src/`.
+Runs all 99 tests using [vitest](https://vitest.dev/) in run (non-watch) mode.
 
-## Link the CLI Globally (for Testing)
+```bash
+npm run test:watch
+```
 
-To test the `dex` command as if it were installed globally:
+Runs tests in watch mode — re-runs on file changes during development.
+
+## Use the CLI during development (without installing globally)
+
+```bash
+npm run dev -- <input> -f <format>
+```
+
+This runs `src/cli.ts` directly via `tsx` (no build step needed):
+
+```bash
+npm run dev -- tests/fixtures/flowchart.gliffy -f mermaid
+```
+
+## Install the CLI globally from local source
+
+Build first, then link:
 
 ```bash
 npm run build
 npm link
 ```
 
-Then use it anywhere:
+After linking, `dex` resolves to your local build:
 
 ```bash
-dex diagram.gliffy -f mermaid
+dex --version
 ```
 
 To unlink when done:
 
 ```bash
-npm unlink -g dex
+npm unlink -g @cleveloper/dex
 ```
 
-## Update Snapshots
-
-Snapshot tests lock the output of all 3 fixtures × 3 formats. If you change an emitter and the output changes intentionally, update the snapshots:
-
-```bash
-npx vitest run --update-snapshots
-```
-
-Review the diff before committing.
-
-## Project Structure
+## Project structure
 
 ```
 src/
-  ir/             # Intermediate Representation type definitions
-  parser/         # Gliffy JSON → IR (shape map, label extractor, two-pass parser)
-  detector/       # Diagram type inference from node shapes
+  ir/
+    types.ts              ← Intermediate Representation types
+  parser/
+    gliffy-types.ts       ← Gliffy JSON TypeScript interfaces
+    shape-map.ts          ← Gliffy shape UID → NodeShape mapping
+    label-extractor.ts    ← HTML tag stripper for Gliffy labels
+    parser.ts             ← Two-pass Gliffy JSON → IR parser
+  detector/
+    detector.ts           ← Shape-voting diagram type classifier
   emitters/
-    drawio.ts     # IR → Draw.io XML
-    mermaid.ts    # IR → Mermaid
-    plantuml.ts   # IR → PlantUML
-    helpers.ts    # Shared ID/label sanitisation
-  cli.ts          # CLI entry point (commander.js)
-  index.ts        # Public library API
+    helpers.ts            ← Shared sanitizeId / sanitizeLabel
+    drawio.ts             ← IR → Draw.io XML emitter
+    mermaid.ts            ← IR → Mermaid emitter
+    plantuml.ts           ← IR → PlantUML emitter
+  cli.ts                  ← dex CLI (commander.js)
+  index.ts                ← Public library API
 
 tests/
-  fixtures/       # Sample .gliffy files (flowchart, sequence, class diagram)
-  parser/
-  detector/
-  emitters/
-  snapshot.test.ts  # Regression snapshots: 3 fixtures × 3 formats
+  fixtures/               ← .gliffy test fixture files
+  parser/                 ← Parser unit tests
+  detector/               ← Detector unit tests
+  emitters/               ← Emitter unit tests
+  ir/                     ← IR types tests
+  snapshot.test.ts        ← Regression snapshots (fixture × format)
+  index.test.ts           ← Public API tests
+  cli.test.ts             ← CLI end-to-end tests
 
 docs/
-  plans/          # Design documents and implementation plans
+  plans/                  ← Design and implementation plans
+  cli-usage.md
+  library-usage.md
+  local-setup.md  ← you are here
+  publishing.md
+  architecture.md
 ```
 
-## Architecture Overview
+## Adding a new test fixture
 
-See [architecture.md](./architecture.md) for a detailed breakdown of the conversion pipeline and IR model.
+1. Place the `.gliffy` file in `tests/fixtures/`
+2. Add a new row to the snapshot test matrix in `tests/snapshot.test.ts`
+3. Run `npm test -- --update-snapshots` to generate baseline snapshots
+4. Commit both the fixture file and the updated `.snap` file
+
+## Regenerating snapshots
+
+If an emitter change intentionally alters output:
+
+```bash
+npm test -- --update-snapshots
+```
+
+Review the diff in `tests/__snapshots__/snapshot.test.ts.snap` before committing.

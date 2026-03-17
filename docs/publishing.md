@@ -1,126 +1,136 @@
 # Publishing to npm
 
+This document covers how to publish `@cleveloper/dex` to the npm registry.
+
 ## Prerequisites
 
-- npm account at [npmjs.com](https://www.npmjs.com/)
-- Logged in locally: `npm whoami` (if not: `npm login`)
-- All tests passing: `npm test`
-- Clean working tree: `git status`
-
-## Pre-publish Checklist
-
-1. **Update version** in `package.json` following [semver](https://semver.org/):
-
-   | Change type | Version bump | Example |
-   |---|---|---|
-   | Bug fix | patch | `0.1.0` → `0.1.1` |
-   | New feature (backwards compatible) | minor | `0.1.0` → `0.2.0` |
-   | Breaking change | major | `0.1.0` → `1.0.0` |
-
-2. **Run tests:**
-
+1. An npm account at [npmjs.com](https://www.npmjs.com/)
+2. Access to the `@cleveloper` npm organisation (or ability to create it)
+3. Logged in via the npm CLI:
    ```bash
-   npm test
+   npm login
    ```
 
-3. **Build:**
+## First-time: create the npm organisation
 
-   ```bash
-   npm run build
-   ```
+If `@cleveloper` does not yet exist on npm:
 
-4. **Inspect what will be published:**
+1. Go to [npmjs.com/org/create](https://www.npmjs.com/org/create)
+2. Create organisation `cleveloper`
+3. Ensure the account used for publishing is a member with publish rights
 
-   ```bash
-   npm pack --dry-run
-   ```
+## Pre-publish checklist
 
-   Confirm only `dist/`, `package.json`, and `README.md` are included. The `src/`, `tests/`, and `docs/` directories should **not** be published.
+Before every publish, verify the following:
 
-5. **Add a `.npmignore`** if needed to exclude non-essential files:
+- [ ] All tests pass: `npm test`
+- [ ] Build is clean: `npm run build`
+- [ ] `package.json` version has been bumped (see versioning below)
+- [ ] `CHANGELOG` or release notes updated (if maintained)
+- [ ] No sensitive files in the package (check `files` field or `.npmignore`)
 
-   ```
-   src/
-   tests/
-   docs/
-   .worktrees/
-   tsconfig*.json
-   vitest.config.ts
-   ```
+## Limit published files
 
-## Publishing
+Add a `files` field to `package.json` to include only what consumers need:
 
-### First-time publish
+```json
+"files": [
+  "dist/",
+  "README.md"
+]
+```
+
+This excludes `src/`, `tests/`, `docs/`, and config files from the published tarball. Verify what will be published without actually publishing:
+
+```bash
+npm pack --dry-run
+```
+
+## Versioning
+
+`dex` follows [Semantic Versioning](https://semver.org/):
+
+| Change | Version bump | Command |
+|---|---|---|
+| Backwards-compatible bug fixes | patch | `npm version patch` |
+| New backwards-compatible features | minor | `npm version minor` |
+| Breaking API changes | major | `npm version major` |
+
+These commands update `package.json`, create a git commit, and tag the release.
+
+## Publish
+
+**First publish (public scoped package):**
 
 ```bash
 npm publish --access public
 ```
 
-> Use `--access public` for scoped packages (e.g. `@yourname/dex`). For unscoped packages it defaults to public.
+The `--access public` flag is required for scoped packages on the first publish. Subsequent publishes do not need it (npm remembers the access level).
 
-### Subsequent releases
-
-```bash
-# Bump version (patch / minor / major)
-npm version patch
-
-# This automatically:
-# - Updates version in package.json
-# - Creates a git commit: "v0.1.1"
-# - Creates a git tag: "v0.1.1"
-
-# Build and publish
-npm run build && npm publish
-
-# Push commit and tag to remote
-git push && git push --tags
-```
-
-## Verify the Published Package
-
-After publishing, verify the package is live:
+**Subsequent publishes:**
 
 ```bash
-npm info dex
+npm version patch   # or minor / major
+npm publish
 ```
 
-Test install in a separate directory:
+**Push the version tag to GitHub:**
 
 ```bash
-mkdir /tmp/dex-test && cd /tmp/dex-test
-npm init -y
-npm install dex
-npx dex --version
+git push origin main --tags
 ```
 
-## Scoped Packages (Optional)
+## Verify the published package
 
-To publish under an npm username or org scope (e.g. `@abudhahir/dex`):
-
-1. Update `package.json`:
-
-   ```json
-   {
-     "name": "@abudhahir/dex"
-   }
-   ```
-
-2. Update the `bin` reference if changed, then publish:
-
-   ```bash
-   npm publish --access public
-   ```
-
-## Unpublishing / Deprecating
-
-To deprecate a version (preferred over unpublishing):
+After publishing, confirm it is available on the registry:
 
 ```bash
-npm deprecate dex@0.1.0 "Use 0.2.0 instead"
+npm info @cleveloper/dex
 ```
 
-To unpublish within 72 hours of publish (npm policy):
+Test a clean install:
 
 ```bash
-npm unpublish dex@0.1.0
+npm install -g @cleveloper/dex
+dex --version
 ```
+
+## Unpublish / deprecate
+
+Unpublishing is only allowed within 72 hours of publish and only if no other package depends on it. Prefer deprecation instead:
+
+```bash
+npm deprecate @cleveloper/dex@"<1.0.0" "Use 1.0.0 or later"
+```
+
+## Automated publishing (optional)
+
+To publish automatically on GitHub tag push, create `.github/workflows/publish.yml`:
+
+```yaml
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+Store your npm token as a GitHub Actions secret named `NPM_TOKEN`.
