@@ -1,0 +1,66 @@
+{
+  "contentType": "application/gliffy+json",
+  "version": "1.3",
+  "metadata": { "title": "Edge Diagram" },
+  "embeddedResources": { "index": 0, "resources": [] },
+  "stage": {
+    "background": "#ffffff",
+    "width": 800,
+    "height": 600,
+    "objects": [
+      {
+        "id": 1,
+        "uid": "com.gliffy.shape.flowchart.flowchart_v1.default.process",
+        "x": 100, "y": 50, "width": 120, "height": 60,
+        "rotation": 0, "order": 1,
+        "graphic": { "type": "Shape", "Shape": { "strokeWidth": 1, "strokeColor": "#000000", "fillColor": "#ffffff", "opacity": 100, "dashStyle": null } },
+        "children": [
+          { "id": 2, "uid": null, "x": 0, "y": 0, "width": 120, "height": 60, "rotation": 0, "order": "auto",
+            "graphic": { "type": "Text", "Text": { "html": "<p><span>Node A</span></p>", "valign": "middle" } },
+            "children": null, "constraints": null }
+        ],
+        "constraints": null
+      },
+      {
+        "id": 3,
+        "uid": "com.gliffy.shape.flowchart.flowchart_v1.default.decision",
+        "x": 100, "y": 200, "width": 120, "height": 80,
+        "rotation": 0, "order": 3,
+        "graphic": { "type": "Shape", "Shape": { "strokeWidth": 1, "strokeColor": "#000000", "fillColor": "#ffe6cc", "opacity": 100, "dashStyle": null } },
+        "children": [
+          { "id": 4, "uid": null, "x": 0, "y": 0, "width": 120, "height": 80, "rotation": 0, "order": "auto",
+            "graphic": { "type": "Text", "Text": { "html": "<p><span>Node B</span></p>", "valign": "middle" } },
+            "children": null, "constraints": null }
+        ],
+        "constraints": null
+      },
+      {
+        "id": 5,
+        "uid": null,
+        "x": 160, "y": 110, "width": 0, "height": 0,
+        "rotation": 0, "order": 5,
+        "graphic": {
+          "type": "Line",
+          "Line": {
+            "strokeWidth": 1,
+            "strokeColor": "#555555",
+            "dashStyle": null,
+            "startArrow": 0,
+            "endArrow": 1,
+            "ortho": true,
+            "controlPath": [[0, 0], [0, 90]]
+          }
+        },
+        "children": [
+          { "id": 6, "uid": null, "x": 0, "y": 0, "width": 0, "height": 0, "rotation": 0, "order": "auto",
+            "graphic": { "type": "Text", "Text": { "html": "<p><span>yes</span></p>", "valign": "middle" } },
+            "children": null, "constraints": null }
+        ],
+        "constraints": {
+          "startConstraint": { "StartPositionConstraint": { "nodeId": 1, "px": 0.5, "py": 1.0 } },
+          "endConstraint": { "EndPositionConstraint": { "nodeId": 3, "px": 0.5, "py": 0.0 } }
+        }
+      }
+    ]
+  }
+}

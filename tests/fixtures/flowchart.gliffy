@@ -1,0 +1,38 @@
+{
+  "contentType": "application/gliffy+json",
+  "version": "1.3",
+  "metadata": { "title": "My Flow" },
+  "embeddedResources": { "index": 0, "resources": [] },
+  "stage": {
+    "background": "#ffffff",
+    "width": 800,
+    "height": 600,
+    "objects": [
+      {
+        "id": 1,
+        "uid": "com.gliffy.shape.flowchart.flowchart_v1.default.process",
+        "x": 100, "y": 50, "width": 120, "height": 60,
+        "rotation": 0, "order": 1,
+        "graphic": { "type": "Shape", "Shape": { "strokeWidth": 1, "strokeColor": "#000000", "fillColor": "#ffffff", "opacity": 100, "dashStyle": null } },
+        "children": [
+          {
+            "id": 2, "uid": null, "x": 0, "y": 0, "width": 120, "height": 60,
+            "rotation": 0, "order": "auto",
+            "graphic": { "type": "Text", "Text": { "html": "<p><span>Start</span></p>", "valign": "middle" } },
+            "children": null, "constraints": null
+          }
+        ],
+        "constraints": null
+      },
+      {
+        "id": 3,
+        "uid": "com.gliffy.shape.flowchart.flowchart_v1.default.decision",
+        "x": 100, "y": 200, "width": 120, "height": 80,
+        "rotation": 0, "order": 3,
+        "graphic": { "type": "Shape", "Shape": { "strokeWidth": 1, "strokeColor": "#000000", "fillColor": "#ffe6cc", "opacity": 100, "dashStyle": null } },
+        "children": [],
+        "constraints": null
+      }
+    ]
+  }
+}
