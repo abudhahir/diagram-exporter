@@ -1,5 +1,3 @@
-import * as fs from 'fs'
-import * as path from 'path'
 import { parse } from './parser/parser'
 import { detect } from './detector/detector'
 import { DrawioEmitter } from './emitters/drawio'
@@ -26,10 +24,7 @@ export function convert(
   format: OutputFormat,
   options: ConvertOptions = {}
 ): ConvertResult {
-  const isJson = input.trimStart().startsWith('{')
-  const rawJson = isJson ? input : fs.readFileSync(path.resolve(input), 'utf-8')
-
-  const diagram: IRDiagram = parse(rawJson)
+  const diagram: IRDiagram = parse(input)
   const detectedType = options.diagramType ?? detect(diagram)
   diagram.type = detectedType
 

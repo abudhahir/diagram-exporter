@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import * as fs from 'fs'
+import * as path from 'path'
 import { convert } from './index'
 import type { OutputFormat } from './index'
 import { DiagramType } from './ir/types'
@@ -19,8 +20,8 @@ program
     options: { format: OutputFormat; output?: string; type?: string }
   ) => {
     const rawInput = input === '-'
-      ? fs.readFileSync('/dev/stdin', 'utf-8')
-      : input
+      ? fs.readFileSync(process.stdin.fd, 'utf-8')
+      : fs.readFileSync(path.resolve(input), 'utf-8')
 
     const result = convert(rawInput, options.format, {
       diagramType: options.type as DiagramType | undefined,
