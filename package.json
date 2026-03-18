@@ -1,10 +1,9 @@
 {
   "name": "@cleveloper/dex",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gliffy diagram conversion library and CLI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  
   "bin": {
     "dex": "dist/cli.js"
   },
