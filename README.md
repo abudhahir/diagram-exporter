@@ -91,10 +91,11 @@ Full guides are in the [`docs/`](docs/) directory (source repo):
 
 | Guide | Description |
 |---|---|
+| [Getting Started](docs/getting-started.md) | New here? Start here — install Node.js, run first conversion, use as a library |
 | [CLI Usage](docs/cli-usage.md) | All flags, piping, stdin examples |
-| [Library Usage](docs/library-usage.md) | Full API reference |
+| [Library Usage](docs/library-usage.md) | Full TypeScript API reference |
 | [Local Setup](docs/local-setup.md) | Dev environment, build, tests, `npm link` |
-| [Publishing](docs/publishing.md) | npm release process and versioning |
+| [Publishing](docs/publishing.md) | npm account setup, login, publish, common errors |
 | [Architecture](docs/architecture.md) | Pipeline, IR model, emitter design |
 
 ---
