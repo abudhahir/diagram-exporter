@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \":*)",
+      "Bash(node dist/cli.js tests/fixtures/flowchart.gliffy --format mermaid)",
+      "Bash(gh issue:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git rm:*)",
+      "Bash(git push:*)",
+      "Bash(npm run:*)",
+      "Bash(npm link:*)",
+      "Bash(dex --version)",
+      "Bash(dex --help)",
+      "Bash(dex tests/fixtures/flowchart.gliffy -f mermaid)"
+    ]
+  }
+}

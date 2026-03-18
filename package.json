@@ -4,6 +4,7 @@
   "description": "Gliffy diagram conversion library and CLI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  
   "bin": {
     "dex": "dist/cli.js"
   },
@@ -18,7 +19,8 @@
     "README.md"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "organization": "cleveloper"
   },
   "license": "MIT",
   "devDependencies": {
